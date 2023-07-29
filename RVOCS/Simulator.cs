@@ -47,6 +47,7 @@ namespace RVO
          */
         private class Worker
         {
+            private Simulator simulator_;
             private readonly ManualResetEvent doneEvent_;
             private readonly int end_;
             private readonly int start_;
@@ -58,8 +59,9 @@ namespace RVO
              * <param name="end">End.</param>
              * <param name="doneEvent">Done event.</param>
              */
-            internal Worker(int start, int end, ManualResetEvent doneEvent)
+            internal Worker(Simulator simulator, int start, int end, ManualResetEvent doneEvent)
             {
+                simulator_ = simulator;
                 start_ = start;
                 end_ = end;
                 doneEvent_ = doneEvent;
@@ -74,8 +76,8 @@ namespace RVO
             {
                 for (int agentNo = start_; agentNo < end_; ++agentNo)
                 {
-                    Simulator.Instance.agents_[agentNo].computeNeighbors();
-                    Simulator.Instance.agents_[agentNo].computeNewVelocity();
+                    simulator_.agents_[agentNo].computeNeighbors();
+                    simulator_.agents_[agentNo].computeNewVelocity();
                 }
 
                 doneEvent_.Set();
@@ -91,7 +93,7 @@ namespace RVO
             {
                 for (int agentNo = start_; agentNo < end_; ++agentNo)
                 {
-                    Simulator.Instance.agents_[agentNo].update();
+                    simulator_.agents_[agentNo].update();
                 }
 
                 doneEvent_.Set();
@@ -103,7 +105,7 @@ namespace RVO
         internal KdTree kdTree_;
         internal float timeStep_;
 
-        private static readonly Simulator instance_ = new();
+        private static Simulator instance_;
 
         private Agent defaultAgent_;
         private ManualResetEvent[] doneEvents_;
@@ -111,11 +113,12 @@ namespace RVO
         private int numWorkers_;
         private float globalTime_;
 
+        [Obsolete]
         public static Simulator Instance
         {
             get
             {
-                return instance_;
+                return instance_ ??= new();
             }
         }
 
@@ -137,6 +140,7 @@ namespace RVO
             }
 
             Agent agent = new();
+            agent.simulator_ = this;
             agent.id_ = agents_.Count;
             agent.maxNeighbors_ = defaultAgent_.maxNeighbors_;
             agent.maxSpeed_ = defaultAgent_.maxSpeed_;
@@ -188,6 +192,7 @@ namespace RVO
         public int addAgent(Vector2 position, float neighborDist, int maxNeighbors, float timeHorizon, float timeHorizonObst, float radius, float maxSpeed, Vector2 velocity)
         {
             Agent agent = new();
+            agent.simulator_ = this;
             agent.id_ = agents_.Count;
             agent.maxNeighbors_ = maxNeighbors;
             agent.maxSpeed_ = maxSpeed;
@@ -290,11 +295,11 @@ namespace RVO
                 for (int block = 0; block < workers_.Length; ++block)
                 {
                     doneEvents_[block] = new ManualResetEvent(false);
-                    workers_[block] = new Worker(block * getNumAgents() / workers_.Length, (block + 1) * getNumAgents() / workers_.Length, doneEvents_[block]);
+                    workers_[block] = new Worker(this, block * getNumAgents() / workers_.Length, (block + 1) * getNumAgents() / workers_.Length, doneEvents_[block]);
                 }
             }
 
-            kdTree_.buildAgentTree();
+            kdTree_.buildAgentTree(this);
 
             for (int block = 0; block < workers_.Length; ++block)
             {
@@ -632,7 +637,7 @@ namespace RVO
          */
         public void processObstacles()
         {
-            kdTree_.buildObstacleTree();
+            kdTree_.buildObstacleTree(this);
         }
 
         /**
@@ -866,7 +871,7 @@ namespace RVO
         /**
          * <summary>Constructs and initializes a simulation.</summary>
          */
-        private Simulator()
+        public Simulator()
         {
             Clear();
         }

@@ -162,15 +162,15 @@ namespace RVO
         /**
          * <summary>Builds an agent k-D tree.</summary>
          */
-        internal void buildAgentTree()
+        internal void buildAgentTree(Simulator simulator)
         {
-            if (agents_ == null || agents_.Length != Simulator.Instance.agents_.Count)
+            if (agents_ == null || agents_.Length != simulator.agents_.Count)
             {
-                agents_ = new Agent[Simulator.Instance.agents_.Count];
+                agents_ = new Agent[simulator.agents_.Count];
 
                 for (int i = 0; i < agents_.Length; ++i)
                 {
-                    agents_[i] = Simulator.Instance.agents_[i];
+                    agents_[i] = simulator.agents_[i];
                 }
 
                 agentTree_ = new AgentTreeNode[2 * agents_.Length];
@@ -183,25 +183,25 @@ namespace RVO
 
             if (agents_.Length != 0)
             {
-                buildAgentTreeRecursive(0, agents_.Length, 0);
+                buildAgentTreeRecursive(simulator ,0, agents_.Length, 0);
             }
         }
 
         /**
          * <summary>Builds an obstacle k-D tree.</summary>
          */
-        internal void buildObstacleTree()
+        internal void buildObstacleTree(Simulator simulator)
         {
             obstacleTree_ = new ObstacleTreeNode();
 
-            IList<Obstacle> obstacles = new List<Obstacle>(Simulator.Instance.obstacles_.Count);
+            IList<Obstacle> obstacles = new List<Obstacle>(simulator.obstacles_.Count);
 
-            for (int i = 0; i < Simulator.Instance.obstacles_.Count; ++i)
+            for (int i = 0; i < simulator.obstacles_.Count; ++i)
             {
-                obstacles.Add(Simulator.Instance.obstacles_[i]);
+                obstacles.Add(simulator.obstacles_[i]);
             }
 
-            obstacleTree_ = buildObstacleTreeRecursive(obstacles);
+            obstacleTree_ = buildObstacleTreeRecursive(simulator, obstacles);
         }
 
         /**
@@ -257,7 +257,7 @@ namespace RVO
          * <param name="end">The ending agent k-D tree node index.</param>
          * <param name="node">The current agent k-D tree node index.</param>
          */
-        private void buildAgentTreeRecursive(int begin, int end, int node)
+        private void buildAgentTreeRecursive(Simulator simulator, int begin, int end, int node)
         {
             agentTree_[node].begin_ = begin;
             agentTree_[node].end_ = end;
@@ -314,8 +314,8 @@ namespace RVO
                 agentTree_[node].left_ = node + 1;
                 agentTree_[node].right_ = node + 2 * leftSize;
 
-                buildAgentTreeRecursive(begin, left, agentTree_[node].left_);
-                buildAgentTreeRecursive(left, end, agentTree_[node].right_);
+                buildAgentTreeRecursive(simulator, begin, left, agentTree_[node].left_);
+                buildAgentTreeRecursive(simulator, left, end, agentTree_[node].right_);
             }
         }
 
@@ -327,7 +327,7 @@ namespace RVO
          *
          * <param name="obstacles">A list of obstacles.</param>
          */
-        private ObstacleTreeNode buildObstacleTreeRecursive(IList<Obstacle> obstacles)
+        private ObstacleTreeNode buildObstacleTreeRecursive(Simulator simulator, IList<Obstacle> obstacles)
         {
             if (obstacles.Count == 0)
             {
@@ -448,9 +448,9 @@ namespace RVO
                         newObstacle.convex_ = true;
                         newObstacle.direction_ = obstacleJ1.direction_;
 
-                        newObstacle.id_ = Simulator.Instance.obstacles_.Count;
+                        newObstacle.id_ = simulator.obstacles_.Count;
 
-                        Simulator.Instance.obstacles_.Add(newObstacle);
+                        simulator.obstacles_.Add(newObstacle);
 
                         obstacleJ1.next_ = newObstacle;
                         obstacleJ2.previous_ = newObstacle;
@@ -469,8 +469,8 @@ namespace RVO
                 }
 
                 node.obstacle_ = obstacleI1;
-                node.left_ = buildObstacleTreeRecursive(leftObstacles);
-                node.right_ = buildObstacleTreeRecursive(rightObstacles);
+                node.left_ = buildObstacleTreeRecursive(simulator, leftObstacles);
+                node.right_ = buildObstacleTreeRecursive(simulator, rightObstacles);
 
                 return node;
             }
