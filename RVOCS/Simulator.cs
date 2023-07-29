@@ -208,6 +208,29 @@ namespace RVO
         }
 
         /**
+         * <summary>Removes an agent from the simulation.</summary>
+         *
+         * <param name="agentNo">The number of the agent that is to be removed.
+         * </param>
+         *
+         * <remarks>Afterwards, the agent that previously had number
+         * <see cref="getNumAgents"/> - 1 will now have number
+         * <paramref name="agentNo"/>.</remarks>
+         */
+        public void removeAgent(int agentNo) {
+            int lastAgentNo = agents_.Count - 1;
+            agents_[lastAgentNo].id_ = agentNo;
+            agents_[agentNo] = agents_[lastAgentNo];
+            agents_.RemoveAt(lastAgentNo);
+
+            /*
+             * Worker indices are no longer valid and have to be recomputed
+             * (otherwise worker thread will except and WaitAll will hang).
+             */
+            workers_ = null;
+        }
+
+        /**
          * <summary>Adds a new obstacle to the simulation.</summary>
          *
          * <returns>The number of the first vertex of the obstacle, or -1 when
