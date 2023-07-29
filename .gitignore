@@ -43,3 +43,6 @@
 bin/
 html/
 obj/
+
+# for use in Unity. should be okay since this submodule has no asset, script, or even asmdef
+*.meta
