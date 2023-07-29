@@ -48,7 +48,7 @@ namespace RVO
         private class Worker
         {
             private Simulator simulator_;
-            private readonly ManualResetEvent doneEvent_;
+            //private readonly ManualResetEvent doneEvent_;
             private readonly int end_;
             private readonly int start_;
 
@@ -59,12 +59,12 @@ namespace RVO
              * <param name="end">End.</param>
              * <param name="doneEvent">Done event.</param>
              */
-            internal Worker(Simulator simulator, int start, int end, ManualResetEvent doneEvent)
+            internal Worker(Simulator simulator, int start, int end/*, ManualResetEvent doneEvent*/)
             {
                 simulator_ = simulator;
                 start_ = start;
                 end_ = end;
-                doneEvent_ = doneEvent;
+                //doneEvent_ = doneEvent;
             }
 
             /**
@@ -80,7 +80,7 @@ namespace RVO
                     simulator_.agents_[agentNo].computeNewVelocity();
                 }
 
-                doneEvent_.Set();
+                //doneEvent_.Set();
             }
 
             /**
@@ -96,7 +96,7 @@ namespace RVO
                     simulator_.agents_[agentNo].update();
                 }
 
-                doneEvent_.Set();
+                //doneEvent_.Set();
             }
         }
 
@@ -108,7 +108,7 @@ namespace RVO
         private static Simulator instance_;
 
         private Agent defaultAgent_;
-        private ManualResetEvent[] doneEvents_;
+        //private ManualResetEvent[] doneEvents_;
         private Worker[] workers_;
         private int numWorkers_;
         private float globalTime_;
@@ -313,12 +313,12 @@ namespace RVO
             if (workers_ == null)
             {
                 workers_ = new Worker[numWorkers_];
-                doneEvents_ = new ManualResetEvent[workers_.Length];
+                //doneEvents_ = new ManualResetEvent[workers_.Length];
 
                 for (int block = 0; block < workers_.Length; ++block)
                 {
-                    doneEvents_[block] = new ManualResetEvent(false);
-                    workers_[block] = new Worker(this, block * getNumAgents() / workers_.Length, (block + 1) * getNumAgents() / workers_.Length, doneEvents_[block]);
+                    //doneEvents_[block] = new ManualResetEvent(false);
+                    workers_[block] = new Worker(this, block * getNumAgents() / workers_.Length, (block + 1) * getNumAgents() / workers_.Length/*, doneEvents_[block]*/);
                 }
             }
 
@@ -326,19 +326,21 @@ namespace RVO
 
             for (int block = 0; block < workers_.Length; ++block)
             {
-                doneEvents_[block].Reset();
-                ThreadPool.QueueUserWorkItem(workers_[block].step);
+                //doneEvents_[block].Reset();
+                //ThreadPool.QueueUserWorkItem(workers_[block].step);
+                workers_[block].step(null);
             }
 
-            WaitHandle.WaitAll(doneEvents_);
+            //WaitHandle.WaitAll(doneEvents_);
 
             for (int block = 0; block < workers_.Length; ++block)
             {
-                doneEvents_[block].Reset();
-                ThreadPool.QueueUserWorkItem(workers_[block].update);
+                //doneEvents_[block].Reset();
+                //ThreadPool.QueueUserWorkItem(workers_[block].update);
+                workers_[block].update(null);
             }
 
-            WaitHandle.WaitAll(doneEvents_);
+            //WaitHandle.WaitAll(doneEvents_);
 
             globalTime_ += timeStep_;
 
