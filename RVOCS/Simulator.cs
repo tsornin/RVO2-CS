@@ -113,7 +113,6 @@ namespace RVO
         private int numWorkers_;
         private float globalTime_;
 
-        [Obsolete]
         public static Simulator Instance
         {
             get
