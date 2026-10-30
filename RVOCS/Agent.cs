@@ -45,6 +45,7 @@ namespace RVO
         internal IList<KeyValuePair<float, Agent>> agentNeighbors_ = new List<KeyValuePair<float, Agent>>();
         internal IList<KeyValuePair<float, Obstacle>> obstacleNeighbors_ = new List<KeyValuePair<float, Obstacle>>();
         internal IList<Line> orcaLines_ = new List<Line>();
+        internal IList<Line> projLines_ = new List<Line>();
         internal Vector2 position_;
         internal Vector2 prefVelocity_;
         internal Vector2 velocity_;
@@ -676,10 +677,10 @@ namespace RVO
                 if (RVOMath.det(lines[i].direction, lines[i].point - result) > distance)
                 {
                     /* Result does not satisfy constraint of line i. */
-                    IList<Line> projLines = new List<Line>();
+                   projLines_.Clear();
                     for (int ii = 0; ii < numObstLines; ++ii)
                     {
-                        projLines.Add(lines[ii]);
+                        projLines_.Add(lines[ii]);
                     }
 
                     for (int j = numObstLines; j < i; ++j)
@@ -708,11 +709,11 @@ namespace RVO
                         }
 
                         line.direction = RVOMath.normalize(lines[j].direction - lines[i].direction);
-                        projLines.Add(line);
+                        projLines_.Add(line);
                     }
 
                     Vector2 tempResult = result;
-                    if (linearProgram2(projLines, radius, new Vector2(-lines[i].direction.y(), lines[i].direction.x()), true, ref result) < projLines.Count)
+                    if (linearProgram2(projLines_, radius, new Vector2(-lines[i].direction.y(), lines[i].direction.x()), true, ref result) < projLines_.Count)
                     {
                         /*
                          * This should in principle not happen. The result is by
